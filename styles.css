@@ -213,7 +213,8 @@ main {
   position: relative;
   background: #000;
   border: 1px solid var(--line);
-  aspect-ratio: 16 / 9;
+  /* aspect-ratio is set by scale.js to match the loaded video */
+  aspect-ratio: 16 / 9;  /* fallback before video loads */
   overflow: hidden;
 }
 
