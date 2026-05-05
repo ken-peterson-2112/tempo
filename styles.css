@@ -1,0 +1,479 @@
+/* =========================================================
+   Tempo · Swing Analyzer
+   Aesthetic: instrument panel, calibration tool
+   ========================================================= */
+
+:root {
+  --bg: #0e0f0d;
+  --bg-elev: #161815;
+  --bg-elev-2: #1d201c;
+  --line: #2a2d28;
+  --line-bright: #3d4239;
+  --ink: #e8e6df;
+  --ink-dim: #8a8a82;
+  --ink-faint: #555550;
+  --accent: #c4ff3d;
+  --accent-dim: #7a9e26;
+  --warn: #ff7a3d;
+  --grid: rgba(196, 255, 61, 0.06);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body {
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: -1px -1px;
+}
+
+/* ========== HEADER ========== */
+header {
+  border-bottom: 1px solid var(--line);
+  padding: 20px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(14, 15, 13, 0.85);
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+
+.brand-mark {
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.brand-mark::first-letter {
+  color: var(--accent);
+}
+
+.brand-tag {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--ink-faint);
+  border-left: 1px solid var(--line-bright);
+  padding-left: 14px;
+}
+
+.session-meta {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--ink-dim);
+  display: flex;
+  gap: 24px;
+}
+
+.session-meta span b {
+  color: var(--ink);
+  font-weight: 500;
+  margin-left: 6px;
+}
+
+/* ========== LAYOUT ========== */
+main {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 48px 32px 80px;
+}
+
+.section-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--ink-dim);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-title::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--accent);
+}
+
+.section-title .step {
+  color: var(--ink-faint);
+  font-weight: 300;
+}
+
+/* ========== STEP BLOCKS ========== */
+.step-block {
+  margin-bottom: 56px;
+  opacity: 0.4;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.step-block.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.step-block.complete {
+  opacity: 0.7;
+  pointer-events: auto;
+}
+
+/* ========== STEP 1: UPLOAD ========== */
+.upload-zone {
+  border: 1px dashed var(--line-bright);
+  background: var(--bg-elev);
+  padding: 64px 32px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  display: block;
+}
+
+.upload-zone:hover {
+  border-color: var(--accent);
+  background: var(--bg-elev-2);
+}
+
+.upload-zone.drag-over {
+  border-color: var(--accent);
+  border-style: solid;
+  background: var(--bg-elev-2);
+}
+
+.upload-zone .label {
+  font-family: 'Fraunces', serif;
+  font-size: 32px;
+  font-weight: 300;
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+
+.upload-zone .hint {
+  font-size: 12px;
+  color: var(--ink-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+.upload-zone input[type="file"] {
+  display: none;
+}
+
+.spec-line {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+  font-size: 11px;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+/* ========== STEP 2: SCALE ========== */
+.scale-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 32px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .scale-grid { grid-template-columns: 1fr; }
+}
+
+.video-stage {
+  position: relative;
+  background: #000;
+  border: 1px solid var(--line);
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+#scaleCanvas {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  cursor: crosshair;
+}
+
+#scaleOverlay {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+}
+
+.scale-controls {
+  background: var(--bg-elev);
+  border: 1px solid var(--line);
+  padding: 24px;
+}
+
+.scale-controls h3 {
+  font-family: 'Fraunces', serif;
+  font-weight: 400;
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+
+.scale-controls .desc {
+  font-size: 12px;
+  color: var(--ink-dim);
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.scale-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+}
+
+.scale-step:first-of-type { border-top: none; }
+
+.scale-step .num {
+  width: 22px; height: 22px;
+  border: 1px solid var(--line-bright);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--ink-dim);
+  flex-shrink: 0;
+}
+
+.scale-step.done .num {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+
+.scale-step.active .num {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.ref-input {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ref-input label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--ink-dim);
+}
+
+.ref-input input {
+  background: var(--bg);
+  border: 1px solid var(--line-bright);
+  color: var(--ink);
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 14px;
+  width: 70px;
+  text-align: right;
+}
+
+.ref-input input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.ref-input select {
+  background: var(--bg);
+  border: 1px solid var(--line-bright);
+  color: var(--ink);
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+/* ========== BUTTONS ========== */
+.btn {
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  padding: 12px 18px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: 100%;
+  margin-top: 16px;
+}
+
+.btn:hover:not(:disabled) {
+  background: #d8ff5e;
+}
+
+.btn:disabled {
+  background: var(--line);
+  color: var(--ink-faint);
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--ink-dim);
+  border: 1px solid var(--line-bright);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  border-color: var(--ink);
+  color: var(--ink);
+  background: transparent;
+}
+
+/* ========== STEP 3: RESULTS ========== */
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+
+@media (max-width: 800px) {
+  .results-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.stat {
+  background: var(--bg-elev);
+  padding: 28px 24px;
+  position: relative;
+}
+
+.stat .key {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  color: var(--ink-dim);
+  margin-bottom: 12px;
+}
+
+.stat .value {
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+  font-size: 48px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+
+.stat .value.pending {
+  color: var(--ink-faint);
+}
+
+.stat .unit {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--ink-dim);
+  margin-left: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.stat .footnote {
+  margin-top: 10px;
+  font-size: 10px;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+/* ========== TODO PANEL ========== */
+.todo-panel {
+  margin-top: 48px;
+  border: 1px solid var(--line);
+  background: var(--bg-elev);
+  padding: 24px;
+}
+
+.todo-panel h4 {
+  font-family: 'Fraunces', serif;
+  font-weight: 400;
+  font-size: 16px;
+  margin-bottom: 16px;
+  color: var(--warn);
+}
+
+.todo-list {
+  list-style: none;
+  font-size: 12px;
+  color: var(--ink-dim);
+  line-height: 1.9;
+}
+
+.todo-list li::before {
+  content: '→ ';
+  color: var(--warn);
+  margin-right: 6px;
+}
+
+.todo-list b.ok    { color: var(--accent); }
+.todo-list b.next  { color: var(--warn); }
+.todo-list b.later { color: var(--ink-dim); }
+
+/* ========== FOOTER ========== */
+footer {
+  border-top: 1px solid var(--line);
+  padding: 24px 32px;
+  text-align: center;
+  font-size: 10px;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+/* ========== ANIMATIONS ========== */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.live-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  margin-right: 6px;
+  animation: pulse 2s ease-in-out infinite;
+}

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tempo — Swing Analyzer v0.1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="brand-mark">Tempo</span>
+    <span class="brand-tag">Swing Analyzer · v0.1</span>
+  </div>
+  <div class="session-meta">
+    <span><span class="live-dot"></span>Session <b id="sessionId">—</b></span>
+    <span>FPS <b id="fpsRead">—</b></span>
+    <span>Scale <b id="scaleRead">—</b></span>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ STEP 1: UPLOAD ============ -->
+  <section class="step-block active" id="step1">
+    <div class="section-title">
+      <span class="step">01 /</span>
+      <span>Capture Input</span>
+    </div>
+
+    <label class="upload-zone" id="uploadZone">
+      <input type="file" id="fileInput" accept="video/*" />
+      <div class="label">Drop a slow-mo swing</div>
+      <div class="hint">240 fps recommended · side-on (down-the-line)</div>
+    </label>
+
+    <div class="spec-line">
+      <span>Format · MP4 / MOV</span>
+      <span>Max · 60 seconds</span>
+      <span>Privacy · Local-only</span>
+    </div>
+  </section>
+
+  <!-- ============ STEP 2: SCALE ============ -->
+  <section class="step-block" id="step2">
+    <div class="section-title">
+      <span class="step">02 /</span>
+      <span>Set Scale Reference</span>
+    </div>
+
+    <div class="scale-grid">
+      <div class="video-stage">
+        <canvas id="scaleCanvas"></canvas>
+        <svg id="scaleOverlay"></svg>
+      </div>
+
+      <div class="scale-controls">
+        <h3>Calibrate pixels → inches</h3>
+        <p class="desc">Tap two points on the video that span a known real-world distance. An alignment stick (48″) or the ball itself (1.68″) work well.</p>
+
+        <div class="scale-step active" id="scaleStep1">
+          <div class="num">1</div>
+          <div>Tap the first reference point</div>
+        </div>
+        <div class="scale-step" id="scaleStep2">
+          <div class="num">2</div>
+          <div>Tap the second reference point</div>
+        </div>
+        <div class="scale-step" id="scaleStep3">
+          <div class="num">3</div>
+          <div>Confirm the real-world distance</div>
+        </div>
+
+        <div class="ref-input">
+          <label>Distance</label>
+          <input type="number" id="refDistance" value="48" step="0.01" />
+          <select id="refUnit">
+            <option value="in">inches</option>
+            <option value="cm">cm</option>
+            <option value="m">meters</option>
+          </select>
+        </div>
+
+        <button class="btn" id="confirmScale" disabled>Confirm scale</button>
+        <button class="btn btn-secondary" id="resetScale">Reset points</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STEP 3: ANALYZE ============ -->
+  <section class="step-block" id="step3">
+    <div class="section-title">
+      <span class="step">03 /</span>
+      <span>Shot Summary</span>
+    </div>
+
+    <div class="results-grid">
+      <div class="stat">
+        <div class="key">Ball Speed</div>
+        <div class="value pending" id="ballSpeed">—<span class="unit">mph</span></div>
+        <div class="footnote">Awaiting analysis</div>
+      </div>
+      <div class="stat">
+        <div class="key">Club Speed</div>
+        <div class="value pending" id="clubSpeed">—<span class="unit">mph</span></div>
+        <div class="footnote">Awaiting analysis</div>
+      </div>
+      <div class="stat">
+        <div class="key">Smash Factor</div>
+        <div class="value pending" id="smash">—</div>
+        <div class="footnote">Ratio · ball ÷ club</div>
+      </div>
+      <div class="stat">
+        <div class="key">Launch Angle</div>
+        <div class="value pending" id="launch">—<span class="unit">°</span></div>
+        <div class="footnote">From horizontal</div>
+      </div>
+    </div>
+
+    <button class="btn" id="runAnalysis" disabled style="margin-top: 24px; max-width: 280px;">Run analysis</button>
+  </section>
+
+  <!-- ============ TODO ============ -->
+  <div class="todo-panel">
+    <h4>Build status — what's wired, what's stubbed</h4>
+    <ul class="todo-list">
+      <li><b class="ok">DONE</b> · video upload, drag-drop, file validation</li>
+      <li><b class="ok">DONE</b> · video → first-frame extraction onto canvas</li>
+      <li><b class="ok">DONE</b> · two-point scale calibration with overlay rendering</li>
+      <li><b class="ok">DONE</b> · pixels-per-inch math, persisted to session state</li>
+      <li><b class="next">NEXT</b> · WebCodecs frame extraction at native fps (currently first-frame only)</li>
+      <li><b class="next">NEXT</b> · ball + club detection (frame differencing, OpenCV.js)</li>
+      <li><b class="next">NEXT</b> · impact frame detection (largest velocity delta)</li>
+      <li><b class="next">NEXT</b> · kinematics: ball speed, club speed, smash factor, launch angle</li>
+      <li><b class="later">LATER</b> · shareable result URL, coach-package export</li>
+    </ul>
+  </div>
+
+</main>
+
+<footer>
+  Tempo · Built locally · No data leaves your device
+</footer>
+
+<!-- Module load order matters: state first, then features, then app last -->
+<script src="js/state.js"></script>
+<script src="js/upload.js"></script>
+<script src="js/scale.js"></script>
+<script src="js/frames.js"></script>
+<script src="js/detect.js"></script>
+<script src="js/kinematics.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
