@@ -14,13 +14,32 @@ Tempo.Scale = (function () {
 
     scaleCanvas.addEventListener('click', onCanvasClick);
     document.getElementById('resetScale').addEventListener('click', reset);
-    document.getElementById('confirmScale').addEventListener('click', confirm);
+    document.getElementById('confirmScale').addEventListener('click', confirmCalibration);
   }
 
   function paintFrame(video) {
     const ctx = scaleCanvas.getContext('2d');
+
+    // Set canvas backing store to native video dimensions
     scaleCanvas.width  = video.videoWidth;
     scaleCanvas.height = video.videoHeight;
+
+    // Match the stage's aspect ratio to the video so the canvas
+    // displays without distortion (handles both landscape + portrait).
+    const stage = scaleCanvas.parentElement;
+    stage.style.aspectRatio = `${video.videoWidth} / ${video.videoHeight}`;
+
+    // Cap stage height for portrait videos so they don't dominate the page
+    if (video.videoHeight > video.videoWidth) {
+      stage.style.maxHeight = '70vh';
+      stage.style.width = 'auto';
+      stage.style.margin = '0 auto';
+    } else {
+      stage.style.maxHeight = '';
+      stage.style.width = '';
+      stage.style.margin = '';
+    }
+
     overlay.setAttribute('viewBox',
       `0 0 ${video.videoWidth} ${video.videoHeight}`);
     ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
@@ -29,12 +48,20 @@ Tempo.Scale = (function () {
   function onCanvasClick(e) {
     if (Tempo.s.scalePoints.length >= 2) return;
 
+    // getBoundingClientRect on the canvas itself gives the displayed area
     const rect = scaleCanvas.getBoundingClientRect();
-    // Convert display-space coords to native canvas pixel coords
-    const x = (e.clientX - rect.left) * (scaleCanvas.width  / rect.width);
-    const y = (e.clientY - rect.top)  * (scaleCanvas.height / rect.height);
 
-    Tempo.s.scalePoints.push({ x, y });
+    // Translate display-space coords (CSS pixels) into native canvas pixels
+    const scaleX = scaleCanvas.width  / rect.width;
+    const scaleY = scaleCanvas.height / rect.height;
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top)  * scaleY;
+
+    // Clamp to canvas bounds in case of any sub-pixel weirdness
+    const clampedX = Math.max(0, Math.min(scaleCanvas.width,  x));
+    const clampedY = Math.max(0, Math.min(scaleCanvas.height, y));
+
+    Tempo.s.scalePoints.push({ x: clampedX, y: clampedY });
     renderOverlay();
     updateStepIndicators();
   }
@@ -121,7 +148,7 @@ Tempo.Scale = (function () {
     updateStepIndicators();
   }
 
-  function confirm() {
+  function confirmCalibration() {
     const [a, b] = Tempo.s.scalePoints;
     const pixelDist = Math.hypot(b.x - a.x, b.y - a.y);
 
@@ -140,6 +167,9 @@ Tempo.Scale = (function () {
     document.getElementById('step2').classList.add('complete');
     document.getElementById('step3').classList.add('active');
     document.getElementById('runAnalysis').disabled = false;
+
+    // Scroll the results section into view so it's obvious something happened
+    document.getElementById('step3').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   // Public API
